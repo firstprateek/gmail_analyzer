@@ -1,0 +1,18 @@
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.3/d3.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/topojson/1.6.9/topojson.min.js"></script>
+<script src="https://datamaps.github.io/scripts/0.4.4/datamaps.all.min.js"></script>
+<div id="container" style="position: relative; width: 100%; height: 100%;"></div>
+script(type='text/javascript').
+		var id_array = JSON.parse('!{ips}');
+		var map = new Datamap({
+			element: document.getElementById('container'),
+			fills: {
+				defaultFill: '#ABDDA4',
+				TEST: 'red'
+			}
+		});
+		map.bubbles(id_array, {
+			popupTemplate: function(geo, data) {
+			  return '<div class="hoverinfo">Origination at ip: ' + data.name + ', Country: ' + data.country + ', Region: '  + data.region + ', Zip: ' + data.zip + ', Frequency: ' + data.frequency + ''
+			}
+		});    
