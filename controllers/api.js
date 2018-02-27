@@ -1,27 +1,12 @@
 const bluebird = require('bluebird');
 const request = bluebird.promisifyAll(require('request'), { multiArgs: true });
 const cheerio = require('cheerio');
-const graph = require('fbgraph');
-const LastFmNode = require('lastfm').LastFmNode;
-const tumblr = require('tumblr.js');
-const GitHub = require('github');
 const Twit = require('twit');
 const stripe = require('stripe')(process.env.STRIPE_SKEY);
 const twilio = require('twilio')(process.env.TWILIO_SID, process.env.TWILIO_TOKEN);
-const Linkedin = require('node-linkedin')(process.env.LINKEDIN_ID, process.env.LINKEDIN_SECRET, process.env.LINKEDIN_CALLBACK_URL);
 const clockwork = require('clockwork')({ key: process.env.CLOCKWORK_KEY });
 const paypal = require('paypal-rest-sdk');
 const lob = require('lob')(process.env.LOB_KEY);
-const foursquare = require('node-foursquare')({
-  secrets: {
-    clientId: process.env.FOURSQUARE_ID,
-    clientSecret: process.env.FOURSQUARE_SECRET,
-    redirectUrl: process.env.FOURSQUARE_REDIRECT_URL
-  }
-});
-
-foursquare.Venues = bluebird.promisifyAll(foursquare.Venues);
-foursquare.Users = bluebird.promisifyAll(foursquare.Users);
 
 const User = require('../models/User');
 const geoip = require('geoip-lite');
@@ -32,50 +17,6 @@ const geoip = require('geoip-lite');
 exports.getApi = (req, res) => {
   res.render('api/index', {
     title: 'API Examples'
-  });
-};
-
-/**
- * GET /api/foursquare
- * Foursquare API example.
- */
-exports.getFoursquare = (req, res, next) => {
-  const token = req.user.tokens.find(token => token.kind === 'foursquare');
-  Promise.all([
-    foursquare.Venues.getTrendingAsync('40.7222756', '-74.0022724', { limit: 50 }, token.accessToken),
-    foursquare.Venues.getVenueAsync('49da74aef964a5208b5e1fe3', token.accessToken),
-    foursquare.Users.getCheckinsAsync('self', null, token.accessToken)
-  ])
-  .then(([trendingVenues, venueDetail, userCheckins]) => {
-    res.render('api/foursquare', {
-      title: 'Foursquare API',
-      trendingVenues,
-      venueDetail,
-      userCheckins
-    });
-  })
-  .catch(next);
-};
-
-/**
- * GET /api/tumblr
- * Tumblr API example.
- */
-exports.getTumblr = (req, res, next) => {
-  const token = req.user.tokens.find(token => token.kind === 'tumblr');
-  const client = tumblr.createClient({
-    consumer_key: process.env.TUMBLR_KEY,
-    consumer_secret: process.env.TUMBLR_SECRET,
-    token: token.accessToken,
-    token_secret: token.tokenSecret
-  });
-  client.posts('mmosdotcom.tumblr.com', { type: 'photo' }, (err, data) => {
-    if (err) { return next(err); }
-    res.render('api/tumblr', {
-      title: 'Tumblr API',
-      blog: data.blog,
-      photoset: data.posts[0].photos
-    });
   });
 };
 
@@ -129,74 +70,6 @@ exports.getNewYorkTimes = (req, res, next) => {
     });
   });
 };
-
-/**
- * GET /api/lastfm
- * Last.fm API example.
- */
-exports.getLastfm = (req, res, next) => {
-  const lastfm = new LastFmNode({
-    api_key: process.env.LASTFM_KEY,
-    secret: process.env.LASTFM_SECRET
-  });
-  const artistInfo = () =>
-    new Promise((resolve, reject) => {
-      lastfm.request('artist.getInfo', {
-        artist: 'Roniit',
-        handlers: {
-          success: resolve,
-          error: reject
-        }
-      });
-    });
-  const artistTopTracks = () =>
-    new Promise((resolve, reject) => {
-      lastfm.request('artist.getTopTracks', {
-        artist: 'Roniit',
-        handlers: {
-          success: (data) => {
-            resolve(data.toptracks.track.slice(0, 10));
-          },
-          error: reject
-        }
-      });
-    });
-  const artistTopAlbums = () =>
-      new Promise((resolve, reject) => {
-        lastfm.request('artist.getTopAlbums', {
-          artist: 'Roniit',
-          handlers: {
-            success: (data) => {
-              resolve(data.topalbums.album.slice(0, 3));
-            },
-            error: reject
-          }
-        });
-      });
-  Promise.all([
-    artistInfo(),
-    artistTopTracks(),
-    artistTopAlbums()
-  ])
-  .then(([artistInfo, artistTopAlbums, artistTopTracks]) => {
-    const artist = {
-      name: artistInfo.artist.name,
-      image: artistInfo.artist.image.slice(-1)[0]['#text'],
-      tags: artistInfo.artist.tags.tag,
-      bio: artistInfo.artist.bio.summary,
-      stats: artistInfo.artist.stats,
-      similar: artistInfo.artist.similar.artist,
-      topAlbums: artistTopAlbums,
-      topTracks: artistTopTracks
-    };
-    res.render('api/lastfm', {
-      title: 'Last.fm API',
-      artist
-    });
-  })
-  .catch(next);
-};
-
 
 /**
  * GET /api/steam
