@@ -57,8 +57,8 @@ passport.use(new LocalStrategy({ usernameField: 'email' }, (email, password, don
  * Sign in with Google.
  */
 const google_stratergy = new GoogleStrategy({
-  clientID: "1009589347679-teq0ft7m76suci3563i40i7tomn7mbms.apps.googleusercontent.com",
-  clientSecret: "-o2GDW3TP9BdKi50PK_I5yw3",
+  clientID: process.env.GOOGLE_ID,
+  clientSecret: process.env.GOOGLE_SECRET,
   callbackURL: '/auth/google/callback',
   passReqToCallback: true
 }, (req, accessToken, refreshToken, profile, done) => {

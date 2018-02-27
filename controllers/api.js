@@ -5,6 +5,7 @@ const cheerio = require('cheerio');
 const User = require('../models/User');
 const geoip = require('geoip-lite');
 
+const Gmail = require('node-gmail-api');
 /**
  * GET /api/gmail
  *
@@ -17,22 +18,19 @@ exports.getApi = (req, res) => {
 
 exports.getGmail = (req, res) => {
   const token = req.user.tokens.find(token => token.kind === 'google');
-
-  console.info('token latest', token.accessToken);
-  
-  const Gmail = require('node-gmail-api');
-
-  console.log('check', "ya29.GltsBetgVdNIrpvfMco9v51QDkt6DMI-0MdZWHub7rESbUkFYGjcxYYj8s3aGEg-5T1CEWJ1UZ-rxCBIeOyR_a0ykmkH8fA-LD1Q_mfnv4Vkbrvd_6hSVmQreRvR" === token.accessToken);
-
-  let header_data = [];
   const gmail = new Gmail(token.accessToken);
-  const s = gmail.messages('label:inbox', { fields: ['id', 'internalDate', 'snippet', 'historyId', 'labelIds', 'payload', 'sizeEstimate'], max: 200});
+  
+  let header_data = [];
+  const s = gmail.messages('label:inbox', { 
+    fields: [ 'id', 'internalDate', 'snippet', 'historyId', 'labelIds', 'payload', 'sizeEstimate' ], 
+    max: 250
+  });
+
   s.on('data', function (d) {
     header_data.push(d);
   })
   .on('end', function() {
     const headers = header_data.map(obj => obj.payload.headers);
-    
     const origination_stats = headers.map(header => header.filter(obj => obj.name && obj.name === 'Received' && obj.value && obj.value.startsWith('from ')));
 
     let origination_ips = origination_stats.map(array => { 
@@ -41,24 +39,22 @@ exports.getGmail = (req, res) => {
       else
         return '[0.0.0.0]'
     });
-    origination_ips = origination_ips.map(ip => {
-    
-    return {
-        'ip': ip.substr(1, ip.length - 2), 
-        'geo': geoip.lookup(ip.substr(1, ip.length - 2))
-      }
 
+    origination_ips = origination_ips.map(ip => {
+      return {
+          'ip': ip.substr(1, ip.length - 2), 
+          'geo': geoip.lookup(ip.substr(1, ip.length - 2))
+        }
     });
 
     dict = {};
-    const resarray = origination_ips.forEach(orig => {
+    origination_ips.forEach(orig => {
       if (dict[orig['ip']]) {
         dict[orig['ip']].counter += 1;
-        
       } else {
-      orig['counter'] = 1;
-      dict[orig['ip']] = orig;
-    }
+        orig['counter'] = 1;
+        dict[orig['ip']] = orig;
+      }
     });
 
     delete dict['0.0.0.0'];
@@ -77,8 +73,6 @@ exports.getGmail = (req, res) => {
         longitude: arr.geo.ll[1]
       }
     });
-
-    console.log('bubs', bubs);
 
     res.render('api/gmail', { ips: JSON.stringify(bubs) });
   })
