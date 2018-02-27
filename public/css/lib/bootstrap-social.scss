@@ -97,9 +97,7 @@ $bs-height-xs:   (floor($font-size-small * 1.2) + $padding-small-vertical + 1);
 .btn-dropbox       { @include btn-social(#1087dd); }
 .btn-flickr        { @include btn-social(#ff0084); }
 .btn-foursquare    { @include btn-social(#f94877); }
-.btn-github        { @include btn-social(#444444); }
 .btn-google        { @include btn-social(#dd4b39); }
-.btn-instagram     { @include btn-social(#3f729b); }
 .btn-linkedin      { @include btn-social(#007bb6); }
 .btn-microsoft     { @include btn-social(#2672ec); }
 .btn-odnoklassniki { @include btn-social(#f4731c); }
@@ -108,7 +106,6 @@ $bs-height-xs:   (floor($font-size-small * 1.2) + $padding-small-vertical + 1);
 .btn-reddit        { @include btn-social(#eff7ff, #000); }
 .btn-soundcloud    { @include btn-social(#ff5500); }
 .btn-tumblr        { @include btn-social(#2c4762); }
-.btn-twitter       { @include btn-social(#55acee); }
 .btn-vimeo         { @include btn-social(#1ab7ea); }
 .btn-vk            { @include btn-social(#587ea3); }
 .btn-yahoo         { @include btn-social(#720e9e); }
