@@ -12,7 +12,7 @@ const Gmail = require('node-gmail-api');
  */
 exports.getApi = (req, res) => {
   res.render('api/index', {
-    title: 'API Examples'
+    title: 'API'
   });
 };
 
@@ -34,7 +34,7 @@ exports.getGmail = (req, res) => {
     const origination_stats = headers.map(header => header.filter(obj => obj.name && obj.name === 'Received' && obj.value && obj.value.startsWith('from ')));
 
     let origination_ips = origination_stats.map(array => { 
-      if (array[0])
+      if (array[0] && array[0].value.match(/\[\d+\.\d+\.\d+\.\d+\]/g) != null)
         return array[0].value.match(/\[\d+\.\d+\.\d+\.\d+\]/g)[0]
       else
         return '[0.0.0.0]'
